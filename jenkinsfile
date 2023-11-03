@@ -1,0 +1,29 @@
+pipeline {
+    agent any
+    stages {
+        stage('Pull Code From GitHub') {
+            steps {
+                git 'https://github.com/priya-2811/kubeproj.git'
+            }
+        }
+        stage('Build the Docker image') {
+            steps {
+                sh 'sudo docker build -t newimage /var/lib/jenkins/workspace/kuber'
+                sh 'sudo docker tag newimage priyadharisini1995/newimage:latest'
+                sh 'sudo docker tag newimage priyadharisini1995/newimage:${BUILD_NUMBER}'
+            }
+        }
+        stage('Push the Docker image') {
+            steps {
+                sh 'sudo docker image push priyadharisini1995/newimage:latest'
+                sh 'sudo docker image push priyadharisini1995/newimage:${BUILD_NUMBER}'
+            }
+        }
+        stage('Deploy on Kubernetes') {
+            steps {
+                sh 'sudo kubectl apply -f /var/lib/jenkins/workspace/kuber/pod.yaml'
+                sh 'sudo kubectl rollout restart deployment loadbalancer-pod'
+            }
+        }
+    }
+}
